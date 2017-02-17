@@ -331,7 +331,9 @@ outer_loop:
 		case l.accept(tokenDigits):
 			return l.stateNumber
 		case l.accept(`"`):
-			return l.stateString
+			return l.stateString('"')
+		case l.accept(`'`):
+			return l.stateString('\'')
 		}
 
 		// Check for symbol
@@ -395,15 +397,15 @@ func (l *lexer) stateNumber() lexerStateFn {
 	return l.stateCode
 }
 
-func (l *lexer) stateString() lexerStateFn {
+func (l *lexer) stateString(quote rune) lexerStateFn {
 	l.ignore()
 	l.startcol-- // we're starting the position at the first "
-	for !l.accept(`"`) {
+	for !l.accept(string(quote)) {
 		switch l.next() {
 		case '\\':
 			// escape sequence
 			switch l.peek() {
-			case '"', '\\':
+			case quote, '\\':
 				l.next()
 			default:
 				return l.errorf("Unknown escape sequence: \\%c", l.peek())
